@@ -1,0 +1,27 @@
+name: API checks
+on: [push, pull_request]
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure environment
+        run: |
+          cp .env.example .env
+          printf '\nDB_PASSWORD=%s\n' "$(openssl rand -hex 24)" >> .env
+      - name: Build and start application and isolated test database
+        run: docker compose --profile test up -d --build --wait --wait-timeout 300
+      - name: Formatting
+        run: docker compose exec -T app vendor/bin/pint --test
+      - name: Static analysis
+        run: docker compose exec -T app vendor/bin/phpstan analyse
+      - name: SQLite feature suite
+        run: docker compose exec -T app php artisan test
+      - name: PostgreSQL feature suite
+        run: docker compose exec -T app php artisan test --configuration=phpunit.pgsql.xml
+      - name: Container logs
+        if: failure()
+        run: docker compose --profile test logs
+      - name: Stop containers
+        if: always()
+        run: docker compose --profile test down

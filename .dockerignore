@@ -1,0 +1,14 @@
+.git
+.agents
+.aws
+.codex
+.env
+.env.*
+!.env.example
+vendor
+node_modules
+storage/**
+!storage/**/.gitignore
+bootstrap/cache/*.php
+.phpunit.cache
+.phpunit.result.cache
